@@ -5,7 +5,8 @@ const passport = require('passport') // passport
 const app = express()
 
 // 引入user.js
-const users = require('./routers/api/user')
+const user = require('./routers/api/user')
+const profile = require('./routers/api/profile')
 
 // DB config
 const db = require('./config/key').mongoURI
@@ -20,14 +21,21 @@ mongoose.connect(db, { useNewUrlParser: true })
         .catch(err => console.log(err))
 
 // 使用中间件实现允许跨域
-
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin','*')
+    res.header('Access-Control-Allow-Headers','Content-Type')
+    res.header('Access-Control-Allow-Methods','PUT,POST,GET,DELETE,OPTIONS')
+    next()
+})
 
 // passport 初始化
 app.use(passport.initialize())
 require('./config/passport')(passport)
 
 // 使用routes
-app.use('/api/users', users)
+app.use('/api/user', user)
+app.use('/api/profile', profile)
+
 
 app.get('/',(req, res) => {
     res.send('hello world')

@@ -6,34 +6,34 @@ const gravatar = require('gravatar') // 头像
 const jwt = require('jsonwebtoken')  // json
 const passport = require('passport')
 
-const User = require('../../models/User')
+const User = require('../../models/User')  // 引入模型
 const { secretOrKey } = require('../../config/key')
 
 // 引入验证方法
 const validateRegisterInput = require('../../validation/register')
 const validateLoginInput = require('../../validation/login')
 
-// $route  GET /api/users/test
+// $route  GET /api/user/test
 // @desc   返回请求的json数据
 // @access Public
 router.get('/test',(req, res) => {
     res.json({msg: 'login works'})
 })
 
-// $route  POST /api/users/register
+// $route  POST /api/user/register
 // @desc   返回请求的json数据
 // @access Public
 router.post('/register',(req, res) => {
     const { errors, isValid } = validateRegisterInput(req.body)  // 调用验证方法 用于校验用户名是否符合规范
     // 判断验证是否通过
     if(!isValid) {
-        return res.status(400).json(errors)
+        return res.status(200).json(errors)
     }
     // 查询数据库中是否拥有邮箱
     User.findOne({email: req.body.email})
     .then(user => {
         if(user) {
-            return res.status(400).json({email: "邮箱已被注册！"})
+            return res.status(200).json({email: "邮箱已被注册！"})
         } else {
             let avatar = gravatar.url(req.body.email, {s: '200', r: 'pg', d: 'mm'})
             const newUser = new User({
@@ -50,15 +50,19 @@ router.post('/register',(req, res) => {
                     newUser.password = hash  // 赋值密码
                     
                     newUser.save()           // 存储
-                        .then(user => res.json(user))  // 返回密码
+                        .then(user => {
+                            let _user = JSON.parse(JSON.stringify(user));   // 深拷贝对象
+                            _user = Object.assign(_user, { success: true }) // 合并对象
+                            return res.json(_user)
+                        })  // 返回密码
                         .catch(err => console.log(err))// 打印报错
                 });
             });
-         }
+         } 
     })
 })
 
-// $route  POST /api/users/login
+// $route  POST /api/user/login
 // @desc   返回token jwt password
 // @access Public
 router.post('/login', (req, res) => {
@@ -66,13 +70,13 @@ router.post('/login', (req, res) => {
     
     // 判断isValid是否通过
     if(!isValid) {
-        return res.status(400).json(errors)
+        return res.status(200).json(errors)
     }
     const { email, password } = req.body
     User.findOne({email})
         .then(user => {
             if(!user) {
-                return res.status(404).json({email: '用户不存在！'})
+                return res.status(200).json({email: '用户不存在！'})
             }
 
             // 密码匹配
@@ -88,13 +92,13 @@ router.post('/login', (req, res) => {
                         
                         // res.json({msg: 'success'})
                     } else {
-                        return res.status(400).json({password: '密码错误！'})
+                        return res.status(200).json({password: '密码错误！'})
                     }
                 })
         })
 })
 
-// $route  GET /api/users/current
+// $route  GET /api/user/current
 // @desc   返回 current user info
 // @access Private 私有接口 需要验证token才能拿到数据
 router.get('/current', passport.authenticate('jwt', {session: false}), (req, res) => {  // passport.authenticate 验证token
