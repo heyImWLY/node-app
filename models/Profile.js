@@ -4,10 +4,10 @@ const Schema = mongoose.Schema
 // Create Schema
 const ProfileSchema = new Schema({
     user: {
-        type: Schema.Types.ObjectId, // 对象ID类型 根据id关联数据库 查找对应user下的profile
+        type: Schema.Types.ObjectId, // 对象ID类型 关联user模型下的主键id 
         ref: 'user', // ref值需要对应mongoose.model中的第一个参数，即数据库中的集合名称，否则查询失败
     },
-    handler: {
+    handle: {
         type: String,
         required: true,
         max: 40
@@ -19,7 +19,7 @@ const ProfileSchema = new Schema({
         type: String,
         required: true
     }, 
-    skill: {
+    skills: {
         type: [String],
         required: true,
     },
